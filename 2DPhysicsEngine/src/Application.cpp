@@ -132,8 +132,8 @@ void Application::Update() {
         {
             //Wind
             particle->AddForce({2.f * PIXELS_PER_METRE, 0});
-            //Friction
-            particle->AddForce(Force::GenerateFrictionForce(*particle, 10 * PIXELS_PER_METRE));
+            // //Friction
+            // particle->AddForce(Force::GenerateFrictionForce(*particle, 10 * PIXELS_PER_METRE));
         }
 
         //Integrate acceleration and velocity to get new position
