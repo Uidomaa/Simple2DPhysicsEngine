@@ -19,7 +19,6 @@ Vec2 Force::GenerateDragForce(const Particle& particle, float constant)
 
 Vec2 Force::GenerateFrictionForce(const Particle& particle, float constant)
 {
-    // Vec2 frictionForce = Vec2{0,0};
     //Calculate friction direction
     const Vec2 frictionDirection = particle.velocity.UnitVector() * -1.f;
     //Calculate friction magnitude
@@ -28,4 +27,17 @@ Vec2 Force::GenerateFrictionForce(const Particle& particle, float constant)
     Vec2 frictionForce{frictionDirection * frictionMagnitude};
     
     return frictionForce;
+}
+
+Vec2 Force::GenerateGravitationalForce(const Particle& a, const Particle& b, float constant)
+{
+    const Vec2 d = b.position - a.position;
+
+    const float distanceSquared = d.MagnitudeSquared();
+
+    const Vec2 attractionDirection = d.UnitVector();
+    const float attractionMagnitude = constant * (a.mass * b.mass) / distanceSquared;
+
+    Vec2 attractionForce = attractionDirection * attractionMagnitude;
+    return attractionForce;
 }

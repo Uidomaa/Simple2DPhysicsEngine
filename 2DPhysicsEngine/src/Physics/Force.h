@@ -7,4 +7,5 @@ struct Force
 public:
     static Vec2 GenerateDragForce(const Particle &particle, float constant);
     static Vec2 GenerateFrictionForce(const Particle &particle, float constant);
+    static Vec2 GenerateGravitationalForce(const Particle &a, const Particle &b, float constant);
 };

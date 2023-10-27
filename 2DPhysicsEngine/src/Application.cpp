@@ -9,8 +9,8 @@ bool Application::IsRunning() {
 
 void Application::CreateParticle(float x, float y)
 {
-    auto newParticle = new Particle(x, y, 1.0);
-    newParticle->radius = 8;
+    auto newParticle = new Particle(x, y, 4.0);
+    newParticle->radius = 12;
     particles.push_back(newParticle);
 }
 
@@ -26,8 +26,8 @@ void Application::Setup() {
     liquid.w = Graphics::Width();
     liquid.h = Graphics::Height()/2;
 
-    auto poolBall = new Particle(Graphics::Width()/4, Graphics::Height()/2, 10.0);
-    poolBall->radius = 32;
+    auto poolBall = new Particle(Graphics::Width()/2, Graphics::Height()/2, 10000.0);
+    poolBall->radius = 100;
     particles.push_back(poolBall);
 }
 
@@ -70,11 +70,12 @@ void Application::Input() {
             mouseCursor.y = event.motion.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
-            // {
-            //     int x, y;
-            //     SDL_GetMouseState(&x, &y);
-            //     CreateParticle(x,y);
-            // }
+            if (event.button.button == SDL_BUTTON_RIGHT)
+            {
+                int x, y;
+                SDL_GetMouseState(&x, &y);
+                CreateParticle(x,y);
+            }
             if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
                 leftmouseButtonDown = true;
@@ -82,15 +83,27 @@ void Application::Input() {
                 SDL_GetMouseState(&x, &y);
                 mouseCursor.x = x;
                 mouseCursor.y = y;
+                //Get closest particle to mouse
+                targetParticle = particles[0];
+                float closestDist = (targetParticle->position - mouseCursor).MagnitudeSquared();
+                for (const auto particle : particles)
+                {
+                    float dist = (particle->position - mouseCursor).MagnitudeSquared();
+                    if (dist < closestDist)
+                    {
+                        targetParticle = particle;
+                        closestDist = dist;
+                    }
+                }
             }
             break;
         case SDL_MOUSEBUTTONUP:
             if (leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
                 leftmouseButtonDown = false;
-                const Vec2 impulseDirection = (particles[0]->position - mouseCursor).UnitVector();
-                const float impulseMagnitude = (particles[0]->position - mouseCursor).Magnitude() * 0.1f;
-                particles[0]->velocity = impulseDirection * impulseMagnitude;
+                const Vec2 impulseDirection = (targetParticle->position - mouseCursor).UnitVector();
+                const float impulseMagnitude = (targetParticle->position - mouseCursor).Magnitude() * 0.01f;
+                targetParticle->velocity = impulseDirection * impulseMagnitude;
             }
             break;
         }
@@ -135,6 +148,16 @@ void Application::Update() {
         }
     }
     //Update physics
+    for (int i = 0; i < particles.size(); ++i)
+    {
+        for (int j = i + 1; j < particles.size(); ++j)
+        {
+            //Gravitational attraction
+            Vec2 attraction = Force::GenerateGravitationalForce(*particles[i], *particles[j], 10.f * PIXELS_PER_METRE);
+            particles[i]->AddForce(attraction);
+            particles[j]->AddForce(-attraction);
+        }
+    }
     for (auto particle : particles)
     {
         // //Gravity
@@ -153,8 +176,8 @@ void Application::Update() {
         // {
         //     //Wind
         //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
-            //Friction
-            particle->AddForce(Force::GenerateFrictionForce(*particle, 30 * PIXELS_PER_METRE));
+        //     //Friction
+        //     particle->AddForce(Force::GenerateFrictionForce(*particle, 30 * PIXELS_PER_METRE));
         // }
 
         //Integrate acceleration and velocity to get new position
@@ -166,18 +189,18 @@ void Application::Update() {
 // Render function (called several times per second to draw objects)
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
-    Graphics::ClearScreen(0xFF056263);
+    Graphics::ClearScreen(0xFF000152);
     //Draw water
     // Graphics::DrawFillRect(liquid.x + liquid.w/2, liquid.y + liquid.h/2, liquid.w, liquid.h, 0xFFb05c2c);
     //Draw force line
     if (leftmouseButtonDown)
     {
-        Graphics::DrawLine(particles[0]->position.x, particles[0]->position.y, mouseCursor.x, mouseCursor.y, 0xFF0000FF);
+        Graphics::DrawLine(targetParticle->position.x, targetParticle->position.y, mouseCursor.x, mouseCursor.y, 0xFF0000FF);
     }
     //Draw particles
     for (auto particle : particles)
     {
-        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFFFFFF);
+        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFF8a850b);
     }
     Graphics::RenderFrame();
 }

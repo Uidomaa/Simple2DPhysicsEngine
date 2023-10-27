@@ -15,6 +15,7 @@ class Application {
     SDL_Rect liquid;
     Vec2 mouseCursor{};
     bool leftmouseButtonDown{};
+    Particle* targetParticle{nullptr};
 
     void CreateParticle(float x, float y);
 
