@@ -13,6 +13,8 @@ class Application {
     Uint32 timeOfPreviousFrame{};
     float deltaTime{};
     SDL_Rect liquid;
+    Vec2 mouseCursor{};
+    bool leftmouseButtonDown{};
 
     void CreateParticle(float x, float y);
 
