@@ -20,12 +20,6 @@ void Application::CreateParticle(float x, float y)
 void Application::Setup() {
     running = Graphics::OpenWindow();
 
-    //Create water graphics
-    liquid.x = 0;
-    liquid.y = Graphics::Height()/2;
-    liquid.w = Graphics::Width();
-    liquid.h = Graphics::Height()/2;
-
     auto poolBall = new Particle(Graphics::Width()/2, Graphics::Height()/2, 10000.0);
     poolBall->radius = 100;
     particles.push_back(poolBall);
@@ -160,26 +154,6 @@ void Application::Update() {
     }
     for (auto particle : particles)
     {
-        // //Gravity
-        // Vec2 weight = {0.f, particle->mass * 9.81f * PIXELS_PER_METRE};
-        // particle->AddForce(weight);
-        // //Input
-        // particle->AddForce(pushForce);
-        // //Underwater
-        // if (particle->position.y > liquid.y)
-        // {
-        //     //Drag
-        //     particle->AddForce(Force::GenerateDragForce(*particle, 1.f));
-        // }
-        // else
-        // //Above water
-        // {
-        //     //Wind
-        //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
-        //     //Friction
-        //     particle->AddForce(Force::GenerateFrictionForce(*particle, 30 * PIXELS_PER_METRE));
-        // }
-
         //Integrate acceleration and velocity to get new position
         particle->Integrate(deltaTime);
     }    
@@ -190,8 +164,6 @@ void Application::Update() {
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
     Graphics::ClearScreen(0xFF000152);
-    //Draw water
-    // Graphics::DrawFillRect(liquid.x + liquid.w/2, liquid.y + liquid.h/2, liquid.w, liquid.h, 0xFFb05c2c);
     //Draw force line
     if (leftmouseButtonDown)
     {
