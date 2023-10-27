@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Editor files
+.idea
+.vs
+*.sln
+
+# Build folder
+x64
