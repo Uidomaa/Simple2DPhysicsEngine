@@ -12,7 +12,8 @@ class Application {
     Vec2 pushForce{0,0};
     Uint32 timeOfPreviousFrame{};
     float deltaTime{};
-    SDL_Rect liquid;
+    // SDL_Rect liquid;
+    Vec2 anchor{};
     Vec2 mouseCursor{};
     bool leftmouseButtonDown{};
     Particle* targetParticle{nullptr};

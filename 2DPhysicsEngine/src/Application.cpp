@@ -20,15 +20,13 @@ void Application::CreateParticle(float x, float y)
 void Application::Setup() {
     running = Graphics::OpenWindow();
 
-    //Create water graphics
-    liquid.x = 0;
-    liquid.y = Graphics::Height()/2;
-    liquid.w = Graphics::Width();
-    liquid.h = Graphics::Height()/2;
-
-    auto poolBall = new Particle(Graphics::Width()/2, Graphics::Height()/2, 10000.0);
-    poolBall->radius = 100;
-    particles.push_back(poolBall);
+    anchor = {Graphics::Width()/2.f, 0};
+    for (int i = 0; i < 1; ++i)
+    {
+        auto particle = new Particle(Graphics::Width()/2, Graphics::Height()/2, 10.0);
+        particle->radius = 20;
+        particles.push_back(particle);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,12 +68,12 @@ void Application::Input() {
             mouseCursor.y = event.motion.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                int x, y;
-                SDL_GetMouseState(&x, &y);
-                CreateParticle(x,y);
-            }
+            // if (event.button.button == SDL_BUTTON_RIGHT)
+            // {
+            //     int x, y;
+            //     SDL_GetMouseState(&x, &y);
+            //     CreateParticle(x,y);
+            // }
             if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
                 leftmouseButtonDown = true;
@@ -102,7 +100,7 @@ void Application::Input() {
             {
                 leftmouseButtonDown = false;
                 const Vec2 impulseDirection = (targetParticle->position - mouseCursor).UnitVector();
-                const float impulseMagnitude = (targetParticle->position - mouseCursor).Magnitude() * 0.01f;
+                const float impulseMagnitude = (targetParticle->position - mouseCursor).Magnitude() * 0.1f;
                 targetParticle->velocity = impulseDirection * impulseMagnitude;
             }
             break;
@@ -150,19 +148,30 @@ void Application::Update() {
     //Update physics
     for (int i = 0; i < particles.size(); ++i)
     {
-        for (int j = i + 1; j < particles.size(); ++j)
+        // for (int j = i + 1; j < particles.size(); ++j)
+        // {
+        //      //Gravitational attraction
+        //      Vec2 attraction = Force::GenerateGravitationalForce(*particles[i], *particles[j], 10.f * PIXELS_PER_METRE);
+        //      particles[i]->AddForce(attraction);
+        //      particles[j]->AddForce(-attraction);
+        // }
+        //Spring
+        if (i == 0)
         {
-            //Gravitational attraction
-            Vec2 attraction = Force::GenerateGravitationalForce(*particles[i], *particles[j], 10.f * PIXELS_PER_METRE);
-            particles[i]->AddForce(attraction);
-            particles[j]->AddForce(-attraction);
+            Vec2 springForce = Force::GenerateSpringForce(*particles[i], anchor, Graphics::Height()/2.f, 60);
+            particles[i]->AddForce(springForce);
+        }
+        else
+        {
+            Vec2 springForce = Force::GenerateSpringForce(*particles[i], *particles[i-1], Graphics::Height()/2.f, 60);
+            particles[i]->AddForce(springForce);
         }
     }
     for (auto particle : particles)
     {
-        // //Gravity
-        // Vec2 weight = {0.f, particle->mass * 9.81f * PIXELS_PER_METRE};
-        // particle->AddForce(weight);
+        //Gravity
+        Vec2 weight = {0.f, particle->mass * 9.81f * PIXELS_PER_METRE};
+        particle->AddForce(weight);
         // //Input
         // particle->AddForce(pushForce);
         // //Underwater
@@ -176,8 +185,8 @@ void Application::Update() {
         // {
         //     //Wind
         //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
-        //     //Friction
-        //     particle->AddForce(Force::GenerateFrictionForce(*particle, 30 * PIXELS_PER_METRE));
+        //Friction
+        particle->AddForce(Force::GenerateFrictionForce(*particle, 30 * PIXELS_PER_METRE));
         // }
 
         //Integrate acceleration and velocity to get new position
@@ -189,9 +198,9 @@ void Application::Update() {
 // Render function (called several times per second to draw objects)
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
-    Graphics::ClearScreen(0xFF000152);
-    //Draw water
-    // Graphics::DrawFillRect(liquid.x + liquid.w/2, liquid.y + liquid.h/2, liquid.w, liquid.h, 0xFFb05c2c);
+    Graphics::ClearScreen(0xFF003466);
+    //Draw spring
+    Graphics::DrawLine(particles[0]->position.x, particles[0]->position.y, anchor.x, anchor.y, 0xFFAAAAAA);
     //Draw force line
     if (leftmouseButtonDown)
     {
@@ -200,7 +209,7 @@ void Application::Render() {
     //Draw particles
     for (auto particle : particles)
     {
-        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFF8a850b);
+        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFF9496);
     }
     Graphics::RenderFrame();
 }
