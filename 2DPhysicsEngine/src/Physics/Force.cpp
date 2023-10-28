@@ -1,14 +1,14 @@
 ﻿#include "Force.h"
-#include "Particle.h"
+#include "Body.h"
 
-Vec2 Force::GenerateDragForce(const Particle& particle, float constant)
+Vec2 Force::GenerateDragForce(const Body& body, float constant)
 {
     Vec2 dragForce = Vec2{0,0};
-    const float velMagSquared = particle.velocity.MagnitudeSquared();
+    const float velMagSquared = body.velocity.MagnitudeSquared();
     if (velMagSquared > 0)
     {
         //Calculate drag direction
-        const Vec2 dragDirection = particle.velocity.UnitVector() * -1.f;
+        const Vec2 dragDirection = body.velocity.UnitVector() * -1.f;
         //Calculate drag magnitude
         const float dragMag = constant * velMagSquared;
         //Generate final drag force with direction and magnitude
@@ -17,10 +17,10 @@ Vec2 Force::GenerateDragForce(const Particle& particle, float constant)
     return dragForce;
 }
 
-Vec2 Force::GenerateFrictionForce(const Particle& particle, float constant)
+Vec2 Force::GenerateFrictionForce(const Body& body, float constant)
 {
     //Calculate friction direction
-    const Vec2 frictionDirection = particle.velocity.UnitVector() * -1.f;
+    const Vec2 frictionDirection = body.velocity.UnitVector() * -1.f;
     //Calculate friction magnitude
     const float frictionMagnitude = constant;
     //Generate final friction force with direction and magnitude
@@ -29,7 +29,7 @@ Vec2 Force::GenerateFrictionForce(const Particle& particle, float constant)
     return frictionForce;
 }
 
-Vec2 Force::GenerateGravitationalForce(const Particle& a, const Particle& b, float constant)
+Vec2 Force::GenerateGravitationalForce(const Body& a, const Body& b, float constant)
 {
     const Vec2 d = b.position - a.position;
 
@@ -42,7 +42,7 @@ Vec2 Force::GenerateGravitationalForce(const Particle& a, const Particle& b, flo
     return attractionForce;
 }
 
-Vec2 Force::GenerateSpringForce(const Particle& a, const Particle& b, float restLength, float constant)
+Vec2 Force::GenerateSpringForce(const Body& a, const Body& b, float restLength, float constant)
 {
     const Vec2 d = a.position - b.position;
 
@@ -54,9 +54,9 @@ Vec2 Force::GenerateSpringForce(const Particle& a, const Particle& b, float rest
     return springForce;
 }
 
-Vec2 Force::GenerateSpringForce(const Particle& particle, Vec2 anchor, float restLength, float constant)
+Vec2 Force::GenerateSpringForce(const Body& body, Vec2 anchor, float restLength, float constant)
 {
-    const Vec2 d = particle.position - anchor;
+    const Vec2 d = body.position - anchor;
 
     const float displacement = d.Magnitude() - restLength;
     const Vec2 springDirection = d.UnitVector();

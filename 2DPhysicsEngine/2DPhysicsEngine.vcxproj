@@ -237,7 +237,7 @@
       <SDLCheck>true</SDLCheck>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="src\Physics\Particle.cpp" />
+    <ClCompile Include="src\Physics\Body.cpp" />
     <ClCompile Include="src\Physics\Vec2.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -249,7 +249,7 @@
     <ClInclude Include="src\Graphics.h" />
     <ClInclude Include="src\Physics\Constants.h" />
     <ClInclude Include="src\Physics\Force.h" />
-    <ClInclude Include="src\Physics\Particle.h" />
+    <ClInclude Include="src\Physics\Body.h" />
     <ClInclude Include="src\Physics\Vec2.h" />
   </ItemGroup>
   <ItemGroup>

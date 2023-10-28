@@ -1,5 +1,4 @@
 #include "Application.h"
-
 #include "Physics/Constants.h"
 #include "Physics/Force.h"
 
@@ -7,11 +6,11 @@ bool Application::IsRunning() {
     return running;
 }
 
-void Application::CreateParticle(float x, float y)
+void Application::CreateBody(float x, float y)
 {
-    auto newParticle = new Particle(x, y, 4.0);
-    newParticle->radius = 12;
-    particles.push_back(newParticle);
+    auto newBody = new Body(x, y, 4.0);
+    newBody->radius = 12;
+    bodies.push_back(newBody);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,9 +26,9 @@ void Application::Setup() {
     {
         for (int j = 0; j < numColumns; ++j)
         {
-            auto particle = new Particle(j * sideLength, i * sideLength, 5.0);
-            particle->radius = 10;
-            particles.push_back(particle);
+            auto body = new Body(j * sideLength, i * sideLength, 5.0);
+            body->radius = 10;
+            bodies.push_back(body);
         }
     }
 }
@@ -77,7 +76,7 @@ void Application::Input() {
             // {
             //     int x, y;
             //     SDL_GetMouseState(&x, &y);
-            //     CreateParticle(x,y);
+            //     CreateBody(x,y);
             // }
             if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
@@ -86,15 +85,15 @@ void Application::Input() {
                 SDL_GetMouseState(&x, &y);
                 mouseCursor.x = x;
                 mouseCursor.y = y;
-                //Get closest particle to mouse
-                targetParticle = particles[0];
-                float closestDist = (targetParticle->position - mouseCursor).MagnitudeSquared();
-                for (const auto particle : particles)
+                //Get closest body to mouse
+                targetBody = bodies[0];
+                float closestDist = (targetBody->position - mouseCursor).MagnitudeSquared();
+                for (const auto body : bodies)
                 {
-                    float dist = (particle->position - mouseCursor).MagnitudeSquared();
+                    float dist = (body->position - mouseCursor).MagnitudeSquared();
                     if (dist < closestDist)
                     {
-                        targetParticle = particle;
+                        targetBody = body;
                         closestDist = dist;
                     }
                 }
@@ -104,9 +103,9 @@ void Application::Input() {
             if (leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
                 leftmouseButtonDown = false;
-                const Vec2 impulseDirection = (targetParticle->position - mouseCursor).UnitVector();
-                const float impulseMagnitude = (targetParticle->position - mouseCursor).Magnitude() * 0.1f;
-                targetParticle->velocity = impulseDirection * impulseMagnitude;
+                const Vec2 impulseDirection = (targetBody->position - mouseCursor).UnitVector();
+                const float impulseMagnitude = (targetBody->position - mouseCursor).Magnitude() * 0.1f;
+                targetBody->velocity = impulseDirection * impulseMagnitude;
             }
             break;
         }
@@ -126,42 +125,42 @@ void Application::Update() {
     if (deltaTime > 0.016) { deltaTime = 0.016f; }
     timeOfPreviousFrame = SDL_GetTicks();
 
-    //Keep particles on-screen
-    for (const auto particle : particles)
+    //Keep bodies on-screen
+    for (const auto body : bodies)
     {
-        if (particle->position.x - particle->radius <= 0)
+        if (body->position.x - body->radius <= 0)
         {
-            particle->position.x = particle->radius;
-            particle->velocity.x *= -0.9f;
+            body->position.x = body->radius;
+            body->velocity.x *= -0.9f;
         }
-        else if (particle->position.x + particle->radius >= Graphics::Width())
+        else if (body->position.x + body->radius >= Graphics::Width())
         {
-            particle->position.x = Graphics::Width() - particle->radius;
-            particle->velocity.x *= -0.9f;
+            body->position.x = Graphics::Width() - body->radius;
+            body->velocity.x *= -0.9f;
         }
-        if (particle->position.y - particle->radius <= 0)
+        if (body->position.y - body->radius <= 0)
         {
-            particle->position.y = particle->radius;
-            particle->velocity.y *= -0.9f;
+            body->position.y = body->radius;
+            body->velocity.y *= -0.9f;
         }
-        else if (particle->position.y + particle->radius >= Graphics::Height())
+        else if (body->position.y + body->radius >= Graphics::Height())
         {
-            particle->position.y = Graphics::Height() - particle->radius;
-            particle->velocity.y *= -0.9f;
+            body->position.y = Graphics::Height() - body->radius;
+            body->velocity.y *= -0.9f;
         }
     }
     //Update physics
-    for (int i = 0; i < particles.size(); ++i)
+    for (int i = 0; i < bodies.size(); ++i)
     {
-        // for (int j = i + 1; j < particles.size(); ++j)
+        // for (int j = i + 1; j < bodies.size(); ++j)
         // {
         //      //Gravitational attraction
-        //      Vec2 attraction = Force::GenerateGravitationalForce(*particles[i], *particles[j], 10.f * PIXELS_PER_METRE);
-        //      particles[i]->AddForce(attraction);
-        //      particles[j]->AddForce(-attraction);
+        //      Vec2 attraction = Force::GenerateGravitationalForce(*bodies[i], *bodies[j], 10.f * PIXELS_PER_METRE);
+        //      bodies[i]->AddForce(attraction);
+        //      bodies[j]->AddForce(-attraction);
         // }
         //Spring
-        for (int j = i + 1; j < particles.size(); ++j)
+        for (int j = i + 1; j < bodies.size(); ++j)
         {
             //Only connect neighbours
             const int deltaA = (j % numColumns) - (i % numColumns);
@@ -172,35 +171,35 @@ void Application::Update() {
             float b = deltaB * sideLength;
             float springLength = sqrt((a * a) + (b * b));
             
-            Vec2 springForce = Force::GenerateSpringForce(*particles[i], *particles[j], springLength, 80);
-            particles[i]->AddForce(springForce);
-            particles[j]->AddForce(-springForce);
+            Vec2 springForce = Force::GenerateSpringForce(*bodies[i], *bodies[j], springLength, 80);
+            bodies[i]->AddForce(springForce);
+            bodies[j]->AddForce(-springForce);
         }
     }
-    for (auto particle : particles)
+    for (auto body : bodies)
     {
         //Gravity
-        Vec2 weight = {0.f, particle->mass * 9.81f * PIXELS_PER_METRE};
-        particle->AddForce(weight);
+        Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
+        body->AddForce(weight);
         //Input
-        particle->AddForce(pushForce);
+        body->AddForce(pushForce);
         // //Underwater
-        // if (particle->position.y > liquid.y)
+        // if (body->position.y > liquid.y)
         // {
         //Drag
-        particle->AddForce(Force::GenerateDragForce(*particle, 0.1f * PIXELS_PER_METRE));
+        body->AddForce(Force::GenerateDragForce(*body, 0.1f * PIXELS_PER_METRE));
         // }
         // else
         // //Above water
         // {
         //     //Wind
-        //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
+        //     body->AddForce({2.f * PIXELS_PER_METRE, 0});
         //Friction
-        particle->AddForce(Force::GenerateFrictionForce(*particle, 2.f * PIXELS_PER_METRE));
+        body->AddForce(Force::GenerateFrictionForce(*body, 2.f * PIXELS_PER_METRE));
         // }
 
         //Integrate acceleration and velocity to get new position
-        particle->Integrate(deltaTime);
+        body->Integrate(deltaTime);
     }    
 }
 
@@ -212,23 +211,23 @@ void Application::Render() {
     //Draw force line
     if (leftmouseButtonDown)
     {
-        Graphics::DrawLine(targetParticle->position.x, targetParticle->position.y, mouseCursor.x, mouseCursor.y, 0xFF0000FF);
+        Graphics::DrawLine(targetBody->position.x, targetBody->position.y, mouseCursor.x, mouseCursor.y, 0xFF0000FF);
     }
     //Draw spring
-    for (int i = 0; i < particles.size(); ++i)
+    for (int i = 0; i < bodies.size(); ++i)
     {
-        for (int j = i + 1; j < particles.size(); ++j)
+        for (int j = i + 1; j < bodies.size(); ++j)
         {
             const int deltaA = (j % numColumns) - (i % numColumns);
             const int deltaB = (j / numColumns) - (i / numColumns);
             if (deltaA + deltaB < 0 || deltaA + deltaB > 2 || (deltaA != 1 && deltaB != 1)) { continue; } //Only connect neighbours
-            Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, particles[j]->position.x, particles[j]->position.y, 0xFFFF94F6);
+            Graphics::DrawLine(bodies[i]->position.x, bodies[i]->position.y, bodies[j]->position.x, bodies[j]->position.y, 0xFFFF94F6);
         }
     }
-    // //Draw particles
-    // for (auto particle : particles)
+    // //Draw bodies
+    // for (auto body : bodies)
     // {
-    //     Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFF94F6);
+    //     Graphics::DrawFillCircle(body->position.x, body->position.y, body->radius, 0xFFFF94F6);
     // }
     Graphics::RenderFrame();
 }
@@ -237,9 +236,9 @@ void Application::Render() {
 // Destroy function to delete objects and close the window
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Destroy() {
-    for (auto particle : particles)
+    for (auto body : bodies)
     {
-        delete particle;
+        delete body;
     }
     Graphics::CloseWindow();
 }

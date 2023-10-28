@@ -2,13 +2,13 @@
 #define APPLICATION_H
 
 #include "./Graphics.h"
-#include "Physics/Particle.h"
+#include "Physics/Body.h"
 #include <vector>
 
 class Application {
     private:
-        bool running = false;
-    std::vector<Particle*> particles;
+    bool running = false;
+    std::vector<Body*> bodies;
     Vec2 pushForce{0,0};
     Uint32 timeOfPreviousFrame{};
     float deltaTime{};
@@ -19,9 +19,9 @@ class Application {
     float sideLength{};
     Vec2 mouseCursor{};
     bool leftmouseButtonDown{};
-    Particle* targetParticle{nullptr};
+    Body* targetBody{nullptr};
 
-    void CreateParticle(float x, float y);
+    void CreateBody(float x, float y);
 
     public:
         Application() = default;
