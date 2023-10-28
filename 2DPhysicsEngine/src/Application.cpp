@@ -23,7 +23,7 @@ void Application::Setup() {
     anchor = {Graphics::Width()/2.f, 0};
     for (int i = 0; i < 20; ++i)
     {
-        auto particle = new Particle(Graphics::Width()/2 + i * 100, i * 50 + 50, 10.0);
+        auto particle = new Particle(Graphics::Width()/2 + i * 50, i * 40 + 50, 10.0);
         particle->radius = 20;
         particles.push_back(particle);
     }
@@ -68,12 +68,6 @@ void Application::Input() {
             mouseCursor.y = event.motion.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
-            // if (event.button.button == SDL_BUTTON_RIGHT)
-            // {
-            //     int x, y;
-            //     SDL_GetMouseState(&x, &y);
-            //     CreateParticle(x,y);
-            // }
             if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
                 leftmouseButtonDown = true;
@@ -148,13 +142,6 @@ void Application::Update() {
     //Update physics
     for (int i = 0; i < particles.size(); ++i)
     {
-        // for (int j = i + 1; j < particles.size(); ++j)
-        // {
-        //      //Gravitational attraction
-        //      Vec2 attraction = Force::GenerateGravitationalForce(*particles[i], *particles[j], 10.f * PIXELS_PER_METRE);
-        //      particles[i]->AddForce(attraction);
-        //      particles[j]->AddForce(-attraction);
-        // }
         //Spring
         if (i == 0)
         {
@@ -175,20 +162,10 @@ void Application::Update() {
         particle->AddForce(weight);
         //Input
         particle->AddForce(pushForce);
-        // //Underwater
-        // if (particle->position.y > liquid.y)
-        // {
         //Drag
         particle->AddForce(Force::GenerateDragForce(*particle, 0.1f * PIXELS_PER_METRE));
-        // }
-        // else
-        // //Above water
-        // {
-        //     //Wind
-        //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
         //Friction
         particle->AddForce(Force::GenerateFrictionForce(*particle, 2.f * PIXELS_PER_METRE));
-        // }
 
         //Integrate acceleration and velocity to get new position
         particle->Integrate(deltaTime);
