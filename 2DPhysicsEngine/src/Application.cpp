@@ -73,12 +73,6 @@ void Application::Input() {
             mouseCursor.y = event.motion.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
-            // if (event.button.button == SDL_BUTTON_RIGHT)
-            // {
-            //     int x, y;
-            //     SDL_GetMouseState(&x, &y);
-            //     CreateParticle(x,y);
-            // }
             if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
             {
                 leftmouseButtonDown = true;
@@ -153,13 +147,6 @@ void Application::Update() {
     //Update physics
     for (int i = 0; i < particles.size(); ++i)
     {
-        // for (int j = i + 1; j < particles.size(); ++j)
-        // {
-        //      //Gravitational attraction
-        //      Vec2 attraction = Force::GenerateGravitationalForce(*particles[i], *particles[j], 10.f * PIXELS_PER_METRE);
-        //      particles[i]->AddForce(attraction);
-        //      particles[j]->AddForce(-attraction);
-        // }
         //Spring
         for (int j = i + 1; j < particles.size(); ++j)
         {
@@ -184,20 +171,10 @@ void Application::Update() {
         particle->AddForce(weight);
         //Input
         particle->AddForce(pushForce);
-        // //Underwater
-        // if (particle->position.y > liquid.y)
-        // {
         //Drag
         particle->AddForce(Force::GenerateDragForce(*particle, 0.1f * PIXELS_PER_METRE));
-        // }
-        // else
-        // //Above water
-        // {
-        //     //Wind
-        //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
         //Friction
         particle->AddForce(Force::GenerateFrictionForce(*particle, 2.f * PIXELS_PER_METRE));
-        // }
 
         //Integrate acceleration and velocity to get new position
         particle->Integrate(deltaTime);
@@ -225,11 +202,11 @@ void Application::Render() {
             Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, particles[j]->position.x, particles[j]->position.y, 0xFFFF94F6);
         }
     }
-    // //Draw particles
-    // for (auto particle : particles)
-    // {
-    //     Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFF94F6);
-    // }
+    //Draw particles
+    for (auto particle : particles)
+    {
+        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFF94F6);
+    }
     Graphics::RenderFrame();
 }
 
