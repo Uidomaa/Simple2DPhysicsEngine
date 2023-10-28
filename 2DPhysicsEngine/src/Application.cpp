@@ -20,12 +20,17 @@ void Application::CreateParticle(float x, float y)
 void Application::Setup() {
     running = Graphics::OpenWindow();
 
-    anchor = {Graphics::Width()/2.f, 0};
-    for (int i = 0; i < 20; ++i)
+    sideLength = 200;
+    numColumns = 10;
+    numRows = 8;
+    for (int i = 0; i < numRows; ++i)
     {
-        auto particle = new Particle(Graphics::Width()/2 + i * 100, i * 50 + 50, 10.0);
-        particle->radius = 20;
-        particles.push_back(particle);
+        for (int j = 0; j < numColumns; ++j)
+        {
+            auto particle = new Particle(j * sideLength, i * sideLength, 5.0);
+            particle->radius = 10;
+            particles.push_back(particle);
+        }
     }
 }
 
@@ -156,16 +161,20 @@ void Application::Update() {
         //      particles[j]->AddForce(-attraction);
         // }
         //Spring
-        if (i == 0)
+        for (int j = i + 1; j < particles.size(); ++j)
         {
-            Vec2 springForce = Force::GenerateSpringForce(*particles[i], anchor, 50, 100);
+            //Only connect neighbours
+            const int deltaA = (j % numColumns) - (i % numColumns);
+            const int deltaB = (j / numColumns) - (i / numColumns);
+            if (deltaA + deltaB < 0 || deltaA + deltaB > 2 || (deltaA != 1 && deltaB != 1)) { continue; }
+            
+            float a = deltaA * sideLength;
+            float b = deltaB * sideLength;
+            float springLength = sqrt((a * a) + (b * b));
+            
+            Vec2 springForce = Force::GenerateSpringForce(*particles[i], *particles[j], springLength, 80);
             particles[i]->AddForce(springForce);
-        }
-        else
-        {
-            Vec2 springForce = Force::GenerateSpringForce(*particles[i], *particles[i-1], 50, 100);
-            particles[i]->AddForce(springForce);
-            particles[i-1]->AddForce(-springForce);
+            particles[j]->AddForce(-springForce);
         }
     }
     for (auto particle : particles)
@@ -199,7 +208,7 @@ void Application::Update() {
 // Render function (called several times per second to draw objects)
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
-    Graphics::ClearScreen(0xFF003466);
+    Graphics::ClearScreen(0xFF102456);
     //Draw force line
     if (leftmouseButtonDown)
     {
@@ -208,20 +217,19 @@ void Application::Render() {
     //Draw spring
     for (int i = 0; i < particles.size(); ++i)
     {
-        if (i == 0)
+        for (int j = i + 1; j < particles.size(); ++j)
         {
-            Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, anchor.x, anchor.y, 0xFFAAAAAA);
-        }
-        else
-        {
-            Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, particles[i-1]->position.x, particles[i-1]->position.y, 0xFFAAAAAA);
+            const int deltaA = (j % numColumns) - (i % numColumns);
+            const int deltaB = (j / numColumns) - (i / numColumns);
+            if (deltaA + deltaB < 0 || deltaA + deltaB > 2 || (deltaA != 1 && deltaB != 1)) { continue; } //Only connect neighbours
+            Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, particles[j]->position.x, particles[j]->position.y, 0xFFFF94F6);
         }
     }
-    //Draw particles
-    for (auto particle : particles)
-    {
-        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFF9496);
-    }
+    // //Draw particles
+    // for (auto particle : particles)
+    // {
+    //     Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFF94F6);
+    // }
     Graphics::RenderFrame();
 }
 

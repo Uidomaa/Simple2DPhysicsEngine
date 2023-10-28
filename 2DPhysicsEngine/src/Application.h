@@ -13,7 +13,10 @@ class Application {
     Uint32 timeOfPreviousFrame{};
     float deltaTime{};
     // SDL_Rect liquid;
-    Vec2 anchor{};
+    // Vec2 anchor{};
+    int numColumns{};
+    int numRows{};
+    float sideLength{};
     Vec2 mouseCursor{};
     bool leftmouseButtonDown{};
     Particle* targetParticle{nullptr};
