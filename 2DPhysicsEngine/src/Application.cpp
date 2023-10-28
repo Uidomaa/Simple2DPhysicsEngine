@@ -21,9 +21,9 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     anchor = {Graphics::Width()/2.f, 0};
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < 20; ++i)
     {
-        auto particle = new Particle(Graphics::Width()/2, Graphics::Height()/2, 10.0);
+        auto particle = new Particle(Graphics::Width()/2 + i * 100, i * 50 + 50, 10.0);
         particle->radius = 20;
         particles.push_back(particle);
     }
@@ -158,13 +158,14 @@ void Application::Update() {
         //Spring
         if (i == 0)
         {
-            Vec2 springForce = Force::GenerateSpringForce(*particles[i], anchor, Graphics::Height()/2.f, 60);
+            Vec2 springForce = Force::GenerateSpringForce(*particles[i], anchor, 50, 100);
             particles[i]->AddForce(springForce);
         }
         else
         {
-            Vec2 springForce = Force::GenerateSpringForce(*particles[i], *particles[i-1], Graphics::Height()/2.f, 60);
+            Vec2 springForce = Force::GenerateSpringForce(*particles[i], *particles[i-1], 50, 100);
             particles[i]->AddForce(springForce);
+            particles[i-1]->AddForce(-springForce);
         }
     }
     for (auto particle : particles)
@@ -172,13 +173,13 @@ void Application::Update() {
         //Gravity
         Vec2 weight = {0.f, particle->mass * 9.81f * PIXELS_PER_METRE};
         particle->AddForce(weight);
-        // //Input
-        // particle->AddForce(pushForce);
+        //Input
+        particle->AddForce(pushForce);
         // //Underwater
         // if (particle->position.y > liquid.y)
         // {
-        //     //Drag
-        //     particle->AddForce(Force::GenerateDragForce(*particle, 1.f));
+        //Drag
+        particle->AddForce(Force::GenerateDragForce(*particle, 0.1f * PIXELS_PER_METRE));
         // }
         // else
         // //Above water
@@ -186,7 +187,7 @@ void Application::Update() {
         //     //Wind
         //     particle->AddForce({2.f * PIXELS_PER_METRE, 0});
         //Friction
-        particle->AddForce(Force::GenerateFrictionForce(*particle, 30 * PIXELS_PER_METRE));
+        particle->AddForce(Force::GenerateFrictionForce(*particle, 2.f * PIXELS_PER_METRE));
         // }
 
         //Integrate acceleration and velocity to get new position
@@ -199,12 +200,22 @@ void Application::Update() {
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render() {
     Graphics::ClearScreen(0xFF003466);
-    //Draw spring
-    Graphics::DrawLine(particles[0]->position.x, particles[0]->position.y, anchor.x, anchor.y, 0xFFAAAAAA);
     //Draw force line
     if (leftmouseButtonDown)
     {
         Graphics::DrawLine(targetParticle->position.x, targetParticle->position.y, mouseCursor.x, mouseCursor.y, 0xFF0000FF);
+    }
+    //Draw spring
+    for (int i = 0; i < particles.size(); ++i)
+    {
+        if (i == 0)
+        {
+            Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, anchor.x, anchor.y, 0xFFAAAAAA);
+        }
+        else
+        {
+            Graphics::DrawLine(particles[i]->position.x, particles[i]->position.y, particles[i-1]->position.x, particles[i-1]->position.y, 0xFFAAAAAA);
+        }
     }
     //Draw particles
     for (auto particle : particles)
