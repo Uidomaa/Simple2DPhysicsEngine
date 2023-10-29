@@ -67,3 +67,16 @@ void Body::ClearTorque()
     sumTorque = 0.0f;
 }
 
+void Body::Update(float deltaTime)
+{
+    const bool isPolygon = shape->GetType() == POLYGON || shape->GetType() == BOX;
+    if (isPolygon)
+    {
+        PolygonShape* polygonShape = dynamic_cast<PolygonShape*>(shape);
+        polygonShape->UpdateVertices(position, rotation);
+    }
+    //Integrate acceleration and velocity to get new position
+    IntegrateLinear(deltaTime);
+    IntegrateAngular(deltaTime);
+}
+

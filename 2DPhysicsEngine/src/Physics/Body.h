@@ -33,6 +33,7 @@ struct Body
     void IntegrateAngular(float dt);
     void ClearForces();
     void ClearTorque();
+    void Update(float dt);
 };
 
 #endif

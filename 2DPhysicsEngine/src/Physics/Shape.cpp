@@ -46,7 +46,7 @@ ShapeType PolygonShape::GetType() const
 
 Shape* PolygonShape::Clone() const
 {
-    return new PolygonShape(vertices);
+    return new PolygonShape(localVertices);
 }
 
 float PolygonShape::GetMomentOfInertia() const
@@ -55,9 +55,35 @@ float PolygonShape::GetMomentOfInertia() const
     return 0.0;
 }
 
+void PolygonShape::UpdateVertices(const Vec2& position, float angle)
+{
+    for (int i = 0; i < localVertices.size(); ++i)
+    {
+        worldVertices[i] = localVertices[i].Rotate(angle);
+        worldVertices[i] += position;
+    }
+}
+
 BoxShape::BoxShape(float width, float height)
 {
-    //TODO
+    this->width = width;
+    this->height = height;
+    //Setup vertices
+    auto a = Vec2{-width * 0.5f, -height * 0.5f};
+    auto b = Vec2{width * 0.5f, -height * 0.5f};
+    auto c = Vec2{width * 0.5f, height * 0.5f};
+    auto d = Vec2{-width * 0.5f, height * 0.5f};
+    
+    localVertices.push_back(a);
+    localVertices.push_back(b);
+    localVertices.push_back(c);
+    localVertices.push_back(d);
+    
+    worldVertices.push_back(a);
+    worldVertices.push_back(b);
+    worldVertices.push_back(c);
+    worldVertices.push_back(d);
+    
     std::cout << "BoxShape constructed" << std::endl;
 }
 

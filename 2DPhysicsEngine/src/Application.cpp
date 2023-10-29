@@ -25,7 +25,7 @@ void Application::Setup() {
     {
         for (int j = 0; j < numColumns; ++j)
         {
-            auto body = new Body(CircleShape(30), j * sideLength, i * sideLength, 5.0);
+            auto body = new Body(BoxShape(200,100), sideLength + j * sideLength, sideLength + i * sideLength, 5.0);
             bodies.push_back(body);
         }
     }
@@ -161,7 +161,7 @@ void Application::Update() {
         //      bodies[i]->AddForce(attraction);
         //      bodies[j]->AddForce(-attraction);
         // }
-        //Spring
+        //Spring forces
         for (int j = i + 1; j < bodies.size(); ++j)
         {
             //Only connect neighbours
@@ -180,32 +180,22 @@ void Application::Update() {
     }
     for (auto body : bodies)
     {
-        //Gravity
-        Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
-        body->AddForce(weight);
+        // //Gravity
+        // Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
+        // body->AddForce(weight);
         //Torque
-        float torque = 20.f;
-        body->AddTorque(torque);
-        //Input
-        body->AddForce(pushForce);
-        // //Underwater
-        // if (body->position.y > liquid.y)
-        // {
-        //Drag
-        body->AddForce(Force::GenerateDragForce(*body, 0.1f * PIXELS_PER_METRE));
-        // }
-        // else
-        // //Above water
-        // {
-        //     //Wind
-        //     body->AddForce({2.f * PIXELS_PER_METRE, 0});
-        //Friction
-        body->AddForce(Force::GenerateFrictionForce(*body, 2.f * PIXELS_PER_METRE));
-        // }
+        body->AddTorque(20.f);
+        // //Input
+        // body->AddForce(pushForce);
+        // //Drag
+        // body->AddForce(Force::GenerateDragForce(*body, 0.1f * PIXELS_PER_METRE));
+        // //Wind
+        // body->AddForce({2.f * PIXELS_PER_METRE, 0});
+        // //Friction
+        // body->AddForce(Force::GenerateFrictionForce(*body, 2.f * PIXELS_PER_METRE));
 
-        //Integrate acceleration and velocity to get new position
-        body->IntegrateLinear(deltaTime);
-        body->IntegrateAngular(deltaTime);
+        //Update polygon vertices
+        body->Update(deltaTime);
     }    
 }
 
@@ -237,6 +227,11 @@ void Application::Render() {
         {
             auto circleShape = dynamic_cast<CircleShape*> (body->shape);
             Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFFFF94F6);
+        }
+        else if (body->shape->GetType() == BOX)
+        {
+            auto boxShape = dynamic_cast<BoxShape*> (body->shape);
+            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->worldVertices, 0xFFFF94F6);
         }
     }
     Graphics::RenderFrame();
