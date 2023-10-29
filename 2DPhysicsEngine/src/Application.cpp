@@ -8,8 +8,7 @@ bool Application::IsRunning() {
 
 void Application::CreateBody(float x, float y)
 {
-    auto newBody = new Body(x, y, 4.0);
-    newBody->radius = 12;
+    auto newBody = new Body(CircleShape(20), x, y, 4.0);
     bodies.push_back(newBody);
 }
 
@@ -20,14 +19,13 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     sideLength = 200;
-    numColumns = 10;
-    numRows = 8;
+    numColumns = 1;
+    numRows = 1;
     for (int i = 0; i < numRows; ++i)
     {
         for (int j = 0; j < numColumns; ++j)
         {
-            auto body = new Body(j * sideLength, i * sideLength, 5.0);
-            body->radius = 10;
+            auto body = new Body(CircleShape(30), j * sideLength, i * sideLength, 5.0);
             bodies.push_back(body);
         }
     }
@@ -128,25 +126,29 @@ void Application::Update() {
     //Keep bodies on-screen
     for (const auto body : bodies)
     {
-        if (body->position.x - body->radius <= 0)
+        if (body->shape->GetType() == CIRCLE)
         {
-            body->position.x = body->radius;
-            body->velocity.x *= -0.9f;
-        }
-        else if (body->position.x + body->radius >= Graphics::Width())
-        {
-            body->position.x = Graphics::Width() - body->radius;
-            body->velocity.x *= -0.9f;
-        }
-        if (body->position.y - body->radius <= 0)
-        {
-            body->position.y = body->radius;
-            body->velocity.y *= -0.9f;
-        }
-        else if (body->position.y + body->radius >= Graphics::Height())
-        {
-            body->position.y = Graphics::Height() - body->radius;
-            body->velocity.y *= -0.9f;
+            CircleShape* circleShape = dynamic_cast<CircleShape*>(body->shape);
+            if (body->position.x - circleShape->radius <= 0)
+            {
+                body->position.x = circleShape->radius;
+                body->velocity.x *= -0.9f;
+            }
+            else if (body->position.x + circleShape->radius >= Graphics::Width())
+            {
+                body->position.x = Graphics::Width() - circleShape->radius;
+                body->velocity.x *= -0.9f;
+            }
+            if (body->position.y - circleShape->radius <= 0)
+            {
+                body->position.y = circleShape->radius;
+                body->velocity.y *= -0.9f;
+            }
+            else if (body->position.y + circleShape->radius >= Graphics::Height())
+            {
+                body->position.y = Graphics::Height() - circleShape->radius;
+                body->velocity.y *= -0.9f;
+            }
         }
     }
     //Update physics
@@ -181,6 +183,9 @@ void Application::Update() {
         //Gravity
         Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
         body->AddForce(weight);
+        //Torque
+        float torque = 20.f;
+        body->AddTorque(torque);
         //Input
         body->AddForce(pushForce);
         // //Underwater
@@ -199,7 +204,8 @@ void Application::Update() {
         // }
 
         //Integrate acceleration and velocity to get new position
-        body->Integrate(deltaTime);
+        body->IntegrateLinear(deltaTime);
+        body->IntegrateAngular(deltaTime);
     }    
 }
 
@@ -224,11 +230,15 @@ void Application::Render() {
             Graphics::DrawLine(bodies[i]->position.x, bodies[i]->position.y, bodies[j]->position.x, bodies[j]->position.y, 0xFFFF94F6);
         }
     }
-    // //Draw bodies
-    // for (auto body : bodies)
-    // {
-    //     Graphics::DrawFillCircle(body->position.x, body->position.y, body->radius, 0xFFFF94F6);
-    // }
+    //Draw bodies
+    for (auto body : bodies)
+    {
+        if (body->shape->GetType() == CIRCLE)
+        {
+            auto circleShape = dynamic_cast<CircleShape*> (body->shape);
+            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFFFF94F6);
+        }
+    }
     Graphics::RenderFrame();
 }
 
