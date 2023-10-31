@@ -11,6 +11,8 @@ enum ShapeType
 
 struct Shape
 {
+    bool isColliding{false};
+    
     virtual ~Shape() = default;
     virtual ShapeType GetType() const = 0;
     virtual Shape* Clone() const = 0;

@@ -12,10 +12,11 @@ Body::Body(const Shape& shape, float x, float y, float mass)
     angularAcceleration = 0.0f;
     sumForces = Vec2{0,0};
     sumTorque = 0.0f;
+    restitution = 1.0f;
     this->mass = mass;
-    oneOverMass = (mass != 0.f ? 1.f / mass : 0.f);
+    invMass = (mass != 0.f ? 1.f / mass : 0.f);
     I = shape.GetMomentOfInertia() * mass;
-    oneOverI = (mass != 0.f ? 1.f / I : 0.f);
+    invI = (mass != 0.f ? 1.f / I : 0.f);
     // std::cout << "Body constructor called" << std::endl;
 }
 
@@ -23,6 +24,11 @@ Body::~Body()
 {
     // std::cout << "Body destructor called" << std::endl;
     delete shape;
+}
+
+bool Body::IsStatic() const
+{
+    return fabs(invMass - 0.0f) < FLT_EPSILON;
 }
 
 void Body::AddForce(const Vec2& force)
@@ -35,10 +41,19 @@ void Body::AddTorque(float torque)
     sumTorque += torque;
 }
 
+void Body::ApplyImpulse(const Vec2& j)
+{
+    if (IsStatic()) { return; }
+
+    velocity += j * invMass;
+}
+
 void Body::IntegrateLinear(float dt)
 {
+    if (IsStatic()) { return; }
+    
     //F = ma
-    acceleration = sumForces * oneOverMass;
+    acceleration = sumForces * invMass;
     
     velocity += acceleration * dt;
     position += velocity/* * dt*/;
@@ -48,8 +63,10 @@ void Body::IntegrateLinear(float dt)
 
 void Body::IntegrateAngular(float dt)
 {
+    if (IsStatic()) { return; }
+    
     //Torque = Ia
-    angularAcceleration = sumTorque * oneOverI;
+    angularAcceleration = sumTorque * invI;
     
     angularVelocity += angularAcceleration * dt;
     rotation += angularVelocity/* * dt*/;

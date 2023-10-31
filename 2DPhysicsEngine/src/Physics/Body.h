@@ -18,17 +18,21 @@ struct Body
     float sumTorque;
     //Mass and Moment of Inertia    
     float mass;
-    float oneOverMass; //Inverse mass for performance
+    float invMass; //Inverse mass for performance
     float I;
-    float oneOverI;
+    float invI;
+
+    float restitution; //aka bounciness
     
     Shape* shape = nullptr;
 
     Body(const Shape& shape, float x, float y, float mass);
     ~Body();
 
+    bool IsStatic() const;
     void AddForce(const Vec2& force);
     void AddTorque(float torque);
+    void ApplyImpulse(const Vec2& j);
     void IntegrateLinear(float dt);
     void IntegrateAngular(float dt);
     void ClearForces();
