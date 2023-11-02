@@ -21,13 +21,14 @@ void Application::Setup() {
     running = Graphics::OpenWindow();
 
     sideLength = 250;
-    numColumns = 1;
-    numRows = 2;
+    numColumns = 2;
+    numRows = 1;
     for (int i = 0; i < numRows; ++i)
     {
         for (int j = 0; j < numColumns; ++j)
         {
-            auto body = new Body(CircleShape(80), sideLength + j * sideLength, sideLength + i * sideLength, 50.0);
+            auto body = new Body(BoxShape(200, 200), sideLength + j * sideLength, sideLength + i * sideLength, 50.0);
+            body->rotation = 0.5f * j;
             bodies.push_back(body);
         }
     }
@@ -68,8 +69,11 @@ void Application::Input() {
                 pushForce.x = 0;
             break;
         case SDL_MOUSEMOTION:
-            mouseCursor.x = event.motion.x;
-            mouseCursor.y = event.motion.y;
+            // mouseCursor.x = event.motion.x;
+            // mouseCursor.y = event.motion.y;
+            int x, y;
+            bodies[0]->position.x = event.motion.x;
+            bodies[0]->position.y = event.motion.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_RIGHT)
@@ -184,11 +188,11 @@ void Application::Update() {
     }
     for (auto body : bodies)
     {
-        //Gravity
-        Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
-        body->AddForce(weight);
+        // //Gravity
+        // Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
+        // body->AddForce(weight);
         // //Torque
-        // body->AddTorque(20.f);
+        // body->AddTorque(30.f);
         //Input
         body->AddForce(pushForce);
         // //Drag
@@ -215,7 +219,11 @@ void Application::Update() {
             const bool isColliding = CollisionDetection::IsColliding(bodies[i], bodies[j], contact);
             if (isColliding)
             {
-                contact.ResolveCollision();
+                // contact.ResolveCollision();
+                //Draw debug info
+                Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFBF5496);
+                Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFBF5496);
+                Graphics::DrawLine(contact.start.x, contact.start.y, contact.start.x + contact.normal.x * 15, contact.start.y + contact.normal.y * 15,0xFFBF5496);
                 bodies[i]->shape->isColliding = true;
                 bodies[j]->shape->isColliding = true;
             }
@@ -251,13 +259,14 @@ void Application::Render() {
         {
             auto circleShape = dynamic_cast<CircleShape*> (body->shape);
             Uint32 colour = circleShape->isColliding ? 0xFF999999 : 0xFFBF5496;
-            // Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, colour);
-            Graphics::DrawFillCircle(body->position.x, body->position.y, circleShape->radius, colour);
+            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, colour);
+            // Graphics::DrawFillCircle(body->position.x, body->position.y, circleShape->radius, colour);
         }
         else if (body->shape->GetType() == BOX)
         {
             auto boxShape = dynamic_cast<BoxShape*> (body->shape);
-            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->worldVertices, 0xFFFF94F6);
+            Uint32 colour = boxShape->isColliding ? 0xFF999999 : 0xFFBF5496;
+            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->worldVertices, colour);
         }
     }
     Graphics::RenderFrame();

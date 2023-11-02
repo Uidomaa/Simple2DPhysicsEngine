@@ -64,6 +64,47 @@ void PolygonShape::UpdateVertices(const Vec2& position, float angle)
     }
 }
 
+Vec2 PolygonShape::EdgeAt(int index) const
+{
+    const int currVertex = index;
+    const int nextVertex = (index + 1) % worldVertices.size();
+    return worldVertices[nextVertex] - worldVertices[currVertex];
+}
+
+float PolygonShape::FindMinSeparation(const PolygonShape& other, Vec2& axis, Vec2& point) const
+{
+    float separation = std::numeric_limits<float>::lowest();
+    //Loop through all the vertices of a
+    for (int i = 0; i < worldVertices.size(); i++)
+    {
+        //  Find the normal axis (perpendicular)
+        Vec2 va = worldVertices[i];
+        Vec2 normal = EdgeAt(i).Normal();
+        float minSep = std::numeric_limits<float>::max();
+        Vec2 minVertex;
+        //  Loop through all the vertices of b
+        for (int j = 0; j < other.worldVertices.size(); j++)
+        {
+            Vec2 vb = other.worldVertices[j];
+            //project vertex b onto the normal axis
+            float projection = (vb - va).Dot(normal);
+            //Keep track of the min separation
+            if (projection < minSep)
+            {
+                minSep = projection;
+                minVertex = vb;
+            }
+        }
+        if (minSep > separation)
+        {
+            separation = minSep;
+            axis = EdgeAt(i);
+            point = minVertex;
+        }        
+    }
+    return separation;
+}
+
 BoxShape::BoxShape(float width, float height)
 {
     this->width = width;

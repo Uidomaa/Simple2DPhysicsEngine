@@ -45,6 +45,9 @@ struct PolygonShape : public Shape
     virtual float GetMomentOfInertia() const override;
     //Translate vertices from local space to world space
     void UpdateVertices(const Vec2& position, float angle);
+    //Return edge along v[index] to v[index+1]
+    Vec2 EdgeAt(int index) const;
+    float FindMinSeparation(const PolygonShape& other, Vec2& axis, Vec2& point) const;
 };
 
 struct BoxShape : public PolygonShape

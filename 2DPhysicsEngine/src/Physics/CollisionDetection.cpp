@@ -6,14 +6,16 @@ bool CollisionDetection::IsColliding(Body* a, Body* b, Contact& contact)
 {
     const bool aIsCircle = a->shape->GetType() == CIRCLE;
     const bool bIsCircle = b->shape->GetType() == CIRCLE;
+    const bool aIsPolygon = a->shape->GetType() == POLYGON || a->shape->GetType() == BOX;
+    const bool bIsPolygon = b->shape->GetType() == POLYGON || b->shape->GetType() == BOX;
 
     if (aIsCircle && bIsCircle)
     {
         return IsCollidingCircleCircle(a, b, contact);
     }
-    else//TODO
+    else if (aIsPolygon && bIsPolygon)
     {
-        
+        return IsCollidingPolygonPolygon(a, b, contact);
     }
     return false;
 }
@@ -40,5 +42,35 @@ bool CollisionDetection::IsCollidingCircleCircle(Body* a, Body* b, Contact& cont
 
     contact.depth = (contact.end - contact.start).Magnitude();
 
+    return true;
+}
+
+bool CollisionDetection::IsCollidingPolygonPolygon(Body* a, Body* b, Contact& contact)
+{
+    const PolygonShape* polygonA = dynamic_cast<PolygonShape*>(a->shape);
+    const PolygonShape* polygonB = dynamic_cast<PolygonShape*>(b->shape);
+    Vec2 axisA, axisB, pointA, pointB;
+    const float abSeparation = polygonA->FindMinSeparation(*polygonB, axisA, pointA);
+    if (abSeparation > 0) { return false; }
+    const float baSeparation = polygonB->FindMinSeparation(*polygonA, axisB, pointB);
+    if (baSeparation > 0) { return false; }
+    
+    //Compute contact information
+    contact.a = a;
+    contact.b = b;
+    if (abSeparation > baSeparation)
+    {
+        contact.depth = -abSeparation;
+        contact.normal = axisA.Normal();
+        contact.start = pointA;
+        contact.end = contact.start + contact.normal * contact.depth;
+    }
+    else
+    {
+        contact.depth = -baSeparation;
+        contact.normal = -axisB.Normal();
+        contact.end = pointB;
+        contact.start = contact.end - contact.normal * contact.depth;
+    }
     return true;
 }
