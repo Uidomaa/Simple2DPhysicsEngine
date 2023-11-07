@@ -21,7 +21,7 @@ class Application {
     bool leftmouseButtonDown{};
     Body* targetBody{nullptr};
 
-    void CreateBody(float x, float y);
+    void CreateBody(float x, float y, char shapeType);
 
     public:
         Application() = default;

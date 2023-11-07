@@ -8,11 +8,14 @@ bool Application::IsRunning() {
     return running;
 }
 
-void Application::CreateBody(float x, float y)
+void Application::CreateBody(float x, float y, char shapeType)
 {
-    auto newBody = new Body(CircleShape(50), x, y, 1.0);
+    Body* newBody;
+    if (shapeType == 'c') { newBody = new Body(CircleShape(50), x, y, 1.0); }
+    else if (shapeType == 'b') { newBody = new Body(BoxShape(100,100), x, y, 1.0); }
+    else { return; }
+    
     newBody->restitution = 0.7f;
-    // auto newBody = new Body(BoxShape(50,50), x, y, 1);
     bodies.push_back(newBody);
 }
 
@@ -45,19 +48,6 @@ void Application::Setup() {
     newBody->restitution = 0.5f;
     newBody->rotation = 1.4f;
     bodies.push_back(newBody);
-    
-    // sideLength = 250;
-    // numColumns = 2;
-    // numRows = 1;
-    // for (int i = 0; i < numRows; ++i)
-    // {
-    //     for (int j = 0; j < numColumns; ++j)
-    //     {
-    //         auto body = new Body(BoxShape(200, 200), sideLength + j * sideLength, sideLength + i * sideLength, 50.0);
-    //         body->rotation = 0.5f * j;
-    //         bodies.push_back(body);
-    //     }
-    // }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,40 +85,20 @@ void Application::Input() {
                 pushForce.x = 0;
             break;
         case SDL_MOUSEMOTION:
-            mouseCursor.x = event.motion.x;
-            mouseCursor.y = event.motion.y;
-            // if (bodies.size() > 1)
-            // {
-            //     bodies[1]->position.x = event.motion.x;
-            //     bodies[1]->position.y = event.motion.y;
-            // }
+
             break;
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
                 int x, y;
                 SDL_GetMouseState(&x, &y);
-                CreateBody(x,y);
+                CreateBody(x,y,'c');
             }
-            if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
+            if (event.button.button == SDL_BUTTON_LEFT)
             {
-                leftmouseButtonDown = true;
                 int x, y;
                 SDL_GetMouseState(&x, &y);
-                mouseCursor.x = x;
-                mouseCursor.y = y;
-                //Get closest body to mouse
-                targetBody = bodies[0];
-                float closestDist = (targetBody->position - mouseCursor).MagnitudeSquared();
-                for (const auto body : bodies)
-                {
-                    float dist = (body->position - mouseCursor).MagnitudeSquared();
-                    if (dist < closestDist)
-                    {
-                        targetBody = body;
-                        closestDist = dist;
-                    }
-                }
+                CreateBody(x,y,'b');
             }
             break;
         case SDL_MOUSEBUTTONUP:
@@ -158,78 +128,13 @@ void Application::Update() {
     //Limit deltaTime (to avoid massive values while debugging)
     if (deltaTime > 0.016) { deltaTime = 0.016f; }
     timeOfPreviousFrame = SDL_GetTicks();
-
-    // //Keep (circle) bodies on-screen
-    // for (const auto body : bodies)
-    // {
-    //     if (body->shape->GetType() == CIRCLE)
-    //     {
-    //         CircleShape* circleShape = dynamic_cast<CircleShape*>(body->shape);
-    //         if (body->position.x - circleShape->radius <= 0)
-    //         {
-    //             body->position.x = circleShape->radius;
-    //             body->velocity.x *= -0.9f;
-    //         }
-    //         else if (body->position.x + circleShape->radius >= Graphics::Width())
-    //         {
-    //             body->position.x = Graphics::Width() - circleShape->radius;
-    //             body->velocity.x *= -0.9f;
-    //         }
-    //         if (body->position.y - circleShape->radius <= 0)
-    //         {
-    //             body->position.y = circleShape->radius;
-    //             body->velocity.y *= -0.9f;
-    //         }
-    //         else if (body->position.y + circleShape->radius >= Graphics::Height())
-    //         {
-    //             body->position.y = Graphics::Height() - circleShape->radius;
-    //             body->velocity.y *= -0.9f;
-    //         }
-    //     }
-    // }
+    
     //Update physics
-    for (int i = 0; i < bodies.size(); ++i)
-    {
-        // for (int j = i + 1; j < bodies.size(); ++j)
-        // {
-        //      //Gravitational attraction
-        //      Vec2 attraction = Force::GenerateGravitationalForce(*bodies[i], *bodies[j], 10.f * PIXELS_PER_METRE);
-        //      bodies[i]->AddForce(attraction);
-        //      bodies[j]->AddForce(-attraction);
-        // }
-        // //Spring forces
-        // for (int j = i + 1; j < bodies.size(); ++j)
-        // {
-        //     //Only connect neighbours
-        //     const int deltaA = (j % numColumns) - (i % numColumns);
-        //     const int deltaB = (j / numColumns) - (i / numColumns);
-        //     if (deltaA + deltaB < 0 || deltaA + deltaB > 2 || (deltaA != 1 && deltaB != 1)) { continue; }
-        //     
-        //     float a = deltaA * sideLength;
-        //     float b = deltaB * sideLength;
-        //     float springLength = sqrt((a * a) + (b * b));
-        //     
-        //     Vec2 springForce = Force::GenerateSpringForce(*bodies[i], *bodies[j], springLength, 80);
-        //     bodies[i]->AddForce(springForce);
-        //     bodies[j]->AddForce(-springForce);
-        // }
-    }
     for (auto body : bodies)
     {
         //Gravity
         Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
         body->AddForce(weight);
-        // //Torque
-        // body->AddTorque(30.f);
-        // //Input
-        // body->AddForce(pushForce);
-        // //Drag
-        // body->AddForce(Force::GenerateDragForce(*body, 0.1f * PIXELS_PER_METRE));
-        // //Wind
-        // body->AddForce({2.f * PIXELS_PER_METRE, 0});
-        // //Friction
-        // body->AddForce(Force::GenerateFrictionForce(*body, 2.f * PIXELS_PER_METRE));
-
         //Update polygon vertices
         body->Update(deltaTime);
     }
@@ -249,11 +154,11 @@ void Application::Update() {
             {
                 contact.ResolveCollision();
                 //Draw debug info
-                Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFBF5496);
-                Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFBF5496);
-                Graphics::DrawLine(contact.start.x, contact.start.y, contact.start.x + contact.normal.x * 15, contact.start.y + contact.normal.y * 15,0xFFBF5496);
-                bodies[i]->shape->isColliding = true;
-                bodies[j]->shape->isColliding = true;
+                // Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFBF5496);
+                // Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFBF5496);
+                // Graphics::DrawLine(contact.start.x, contact.start.y, contact.start.x + contact.normal.x * 15, contact.start.y + contact.normal.y * 15,0xFFBF5496);
+                // bodies[i]->shape->isColliding = true;
+                // bodies[j]->shape->isColliding = true;
             }
         }
     }
@@ -269,17 +174,6 @@ void Application::Render() {
     {
         Graphics::DrawLine(targetBody->position.x, targetBody->position.y, mouseCursor.x, mouseCursor.y, 0xFF0000FF);
     }
-    // //Draw spring
-    // for (int i = 0; i < bodies.size(); ++i)
-    // {
-    //     for (int j = i + 1; j < bodies.size(); ++j)
-    //     {
-    //         const int deltaA = (j % numColumns) - (i % numColumns);
-    //         const int deltaB = (j / numColumns) - (i / numColumns);
-    //         if (deltaA + deltaB < 0 || deltaA + deltaB > 2 || (deltaA != 1 && deltaB != 1)) { continue; } //Only connect neighbours
-    //         Graphics::DrawLine(bodies[i]->position.x, bodies[i]->position.y, bodies[j]->position.x, bodies[j]->position.y, 0xFFFF94F6);
-    //     }
-    // }
     //Draw bodies
     for (auto body : bodies)
     {
