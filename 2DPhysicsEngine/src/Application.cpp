@@ -10,7 +10,9 @@ bool Application::IsRunning() {
 
 void Application::CreateBody(float x, float y)
 {
-    auto newBody = new Body(CircleShape(50), x, y, 4.0);
+    auto newBody = new Body(CircleShape(50), x, y, 1.0);
+    newBody->restitution = 0.7f;
+    // auto newBody = new Body(BoxShape(50,50), x, y, 1);
     bodies.push_back(newBody);
 }
 
@@ -20,18 +22,42 @@ void Application::CreateBody(float x, float y)
 void Application::Setup() {
     running = Graphics::OpenWindow();
 
-    sideLength = 250;
-    numColumns = 2;
-    numRows = 1;
-    for (int i = 0; i < numRows; ++i)
-    {
-        for (int j = 0; j < numColumns; ++j)
-        {
-            auto body = new Body(BoxShape(200, 200), sideLength + j * sideLength, sideLength + i * sideLength, 50.0);
-            body->rotation = 0.5f * j;
-            bodies.push_back(body);
-        }
-    }
+    //Static floor
+    Body* floor = new Body(BoxShape(Graphics::Width() - 100, 100), Graphics::Width()/2.0f, Graphics::Height() - 100, 0.f);
+    floor->restitution = 0.2f;
+    bodies.push_back(floor);
+    //Static ceiling
+    Body* ceiling = new Body(BoxShape(Graphics::Width() - 100, 100), Graphics::Width()/2.0f, 100, 0.f);
+    ceiling->restitution = 0.2f;
+    bodies.push_back(ceiling);
+    //Static left wall
+    Body* lWall = new Body(BoxShape(100, Graphics::Height() - 100), 100, Graphics::Height()/2.0f, 0.f);
+    lWall->restitution = 0.2f;
+    bodies.push_back(lWall);    
+    //Static right wall
+    Body* rWall = new Body(BoxShape(100, Graphics::Height() - 100), Graphics::Width() - 100, Graphics::Height()/2.0f, 0.f);
+    rWall->restitution = 0.2f;
+    bodies.push_back(rWall);
+    
+    // //Static box/Circle
+    Body* newBody = new Body(BoxShape(400, 400), Graphics::Width()/2.0f, Graphics::Height()/2.f, 0.f);
+    // Body* newBody = new Body(CircleShape(200), Graphics::Width()/2.0f, Graphics::Height()/2.f, 0.f);
+    newBody->restitution = 0.5f;
+    newBody->rotation = 1.4f;
+    bodies.push_back(newBody);
+    
+    // sideLength = 250;
+    // numColumns = 2;
+    // numRows = 1;
+    // for (int i = 0; i < numRows; ++i)
+    // {
+    //     for (int j = 0; j < numColumns; ++j)
+    //     {
+    //         auto body = new Body(BoxShape(200, 200), sideLength + j * sideLength, sideLength + i * sideLength, 50.0);
+    //         body->rotation = 0.5f * j;
+    //         bodies.push_back(body);
+    //     }
+    // }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,11 +95,13 @@ void Application::Input() {
                 pushForce.x = 0;
             break;
         case SDL_MOUSEMOTION:
-            // mouseCursor.x = event.motion.x;
-            // mouseCursor.y = event.motion.y;
-            int x, y;
-            bodies[0]->position.x = event.motion.x;
-            bodies[0]->position.y = event.motion.y;
+            mouseCursor.x = event.motion.x;
+            mouseCursor.y = event.motion.y;
+            // if (bodies.size() > 1)
+            // {
+            //     bodies[1]->position.x = event.motion.x;
+            //     bodies[1]->position.y = event.motion.y;
+            // }
             break;
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_RIGHT)
@@ -131,34 +159,34 @@ void Application::Update() {
     if (deltaTime > 0.016) { deltaTime = 0.016f; }
     timeOfPreviousFrame = SDL_GetTicks();
 
-    //Keep bodies on-screen
-    for (const auto body : bodies)
-    {
-        if (body->shape->GetType() == CIRCLE)
-        {
-            CircleShape* circleShape = dynamic_cast<CircleShape*>(body->shape);
-            if (body->position.x - circleShape->radius <= 0)
-            {
-                body->position.x = circleShape->radius;
-                body->velocity.x *= -0.9f;
-            }
-            else if (body->position.x + circleShape->radius >= Graphics::Width())
-            {
-                body->position.x = Graphics::Width() - circleShape->radius;
-                body->velocity.x *= -0.9f;
-            }
-            if (body->position.y - circleShape->radius <= 0)
-            {
-                body->position.y = circleShape->radius;
-                body->velocity.y *= -0.9f;
-            }
-            else if (body->position.y + circleShape->radius >= Graphics::Height())
-            {
-                body->position.y = Graphics::Height() - circleShape->radius;
-                body->velocity.y *= -0.9f;
-            }
-        }
-    }
+    // //Keep (circle) bodies on-screen
+    // for (const auto body : bodies)
+    // {
+    //     if (body->shape->GetType() == CIRCLE)
+    //     {
+    //         CircleShape* circleShape = dynamic_cast<CircleShape*>(body->shape);
+    //         if (body->position.x - circleShape->radius <= 0)
+    //         {
+    //             body->position.x = circleShape->radius;
+    //             body->velocity.x *= -0.9f;
+    //         }
+    //         else if (body->position.x + circleShape->radius >= Graphics::Width())
+    //         {
+    //             body->position.x = Graphics::Width() - circleShape->radius;
+    //             body->velocity.x *= -0.9f;
+    //         }
+    //         if (body->position.y - circleShape->radius <= 0)
+    //         {
+    //             body->position.y = circleShape->radius;
+    //             body->velocity.y *= -0.9f;
+    //         }
+    //         else if (body->position.y + circleShape->radius >= Graphics::Height())
+    //         {
+    //             body->position.y = Graphics::Height() - circleShape->radius;
+    //             body->velocity.y *= -0.9f;
+    //         }
+    //     }
+    // }
     //Update physics
     for (int i = 0; i < bodies.size(); ++i)
     {
@@ -188,13 +216,13 @@ void Application::Update() {
     }
     for (auto body : bodies)
     {
-        // //Gravity
-        // Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
-        // body->AddForce(weight);
+        //Gravity
+        Vec2 weight = {0.f, body->mass * 9.81f * PIXELS_PER_METRE};
+        body->AddForce(weight);
         // //Torque
         // body->AddTorque(30.f);
-        //Input
-        body->AddForce(pushForce);
+        // //Input
+        // body->AddForce(pushForce);
         // //Drag
         // body->AddForce(Force::GenerateDragForce(*body, 0.1f * PIXELS_PER_METRE));
         // //Wind
@@ -206,7 +234,7 @@ void Application::Update() {
         body->Update(deltaTime);
     }
     //Reset collision debug state
-    for (auto body : bodies)
+    for (const auto body : bodies)
     {
         body->shape->isColliding = false;
     }
@@ -219,7 +247,7 @@ void Application::Update() {
             const bool isColliding = CollisionDetection::IsColliding(bodies[i], bodies[j], contact);
             if (isColliding)
             {
-                // contact.ResolveCollision();
+                contact.ResolveCollision();
                 //Draw debug info
                 Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFBF5496);
                 Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFBF5496);

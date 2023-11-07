@@ -23,6 +23,7 @@ struct Body
     float invI;
 
     float restitution; //aka bounciness
+    float friction; //coefficient of friction
     
     Shape* shape = nullptr;
 
@@ -33,6 +34,7 @@ struct Body
     void AddForce(const Vec2& force);
     void AddTorque(float torque);
     void ApplyImpulse(const Vec2& j);
+    void ApplyImpulse(const Vec2& j, const Vec2& r);
     void IntegrateLinear(float dt);
     void IntegrateAngular(float dt);
     void ClearForces();

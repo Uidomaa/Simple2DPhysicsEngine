@@ -1,5 +1,6 @@
 ﻿#include "Shape.h"
 #include <iostream>
+#include "Body.h"
 
 CircleShape::CircleShape(const float radius)
 {

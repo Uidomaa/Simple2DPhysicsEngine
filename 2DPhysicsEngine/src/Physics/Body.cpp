@@ -13,6 +13,7 @@ Body::Body(const Shape& shape, float x, float y, float mass)
     sumForces = Vec2{0,0};
     sumTorque = 0.0f;
     restitution = 1.0f;
+    friction = 0.5f;
     this->mass = mass;
     invMass = (mass != 0.f ? 1.f / mass : 0.f);
     I = shape.GetMomentOfInertia() * mass;
@@ -48,6 +49,14 @@ void Body::ApplyImpulse(const Vec2& j)
     velocity += j * invMass;
 }
 
+void Body::ApplyImpulse(const Vec2& j, const Vec2& r)
+{
+    if (IsStatic()) { return; }
+
+    velocity += j * invMass;
+    angularVelocity += r.Cross(j) * invI;
+}
+
 void Body::IntegrateLinear(float dt)
 {
     if (IsStatic()) { return; }
@@ -56,7 +65,7 @@ void Body::IntegrateLinear(float dt)
     acceleration = sumForces * invMass;
     
     velocity += acceleration * dt;
-    position += velocity/* * dt*/;
+    position += velocity * dt;
 
     ClearForces();
 }
@@ -69,7 +78,7 @@ void Body::IntegrateAngular(float dt)
     angularAcceleration = sumTorque * invI;
     
     angularVelocity += angularAcceleration * dt;
-    rotation += angularVelocity/* * dt*/;
+    rotation += angularVelocity * dt;
 
     ClearTorque();
 }
@@ -86,14 +95,14 @@ void Body::ClearTorque()
 
 void Body::Update(float deltaTime)
 {
+    //Integrate acceleration and velocity to get new position
+    IntegrateLinear(deltaTime);
+    IntegrateAngular(deltaTime);
     const bool isPolygon = shape->GetType() == POLYGON || shape->GetType() == BOX;
     if (isPolygon)
     {
         PolygonShape* polygonShape = dynamic_cast<PolygonShape*>(shape);
         polygonShape->UpdateVertices(position, rotation);
     }
-    //Integrate acceleration and velocity to get new position
-    IntegrateLinear(deltaTime);
-    IntegrateAngular(deltaTime);
 }
 

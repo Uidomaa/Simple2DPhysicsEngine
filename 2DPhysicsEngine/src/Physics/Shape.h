@@ -2,6 +2,8 @@
 #include <vector>
 #include "Vec2.h"
 
+struct Body;
+
 enum ShapeType
 {
     CIRCLE,
@@ -48,6 +50,7 @@ struct PolygonShape : public Shape
     //Return edge along v[index] to v[index+1]
     Vec2 EdgeAt(int index) const;
     float FindMinSeparation(const PolygonShape& other, Vec2& axis, Vec2& point) const;
+    float FindMinSeparation(const Body& circle, Vec2& axis, Vec2& point) const;
 };
 
 struct BoxShape : public PolygonShape
