@@ -1,5 +1,8 @@
 #ifndef BODY_H
 #define BODY_H
+#include <SDL.h>
+#include <SDL_image.h>
+
 #include "Shape.h"
 #include "Vec2.h"
 
@@ -27,9 +30,12 @@ struct Body
     
     Shape* shape = nullptr;
 
+    SDL_Texture* texture = nullptr;
+
     Body(const Shape& shape, float x, float y, float mass);
     ~Body();
 
+    void SetTexture(const char* textureFileName);
     bool IsStatic() const;
     void AddForce(const Vec2& force);
     void AddTorque(float torque);

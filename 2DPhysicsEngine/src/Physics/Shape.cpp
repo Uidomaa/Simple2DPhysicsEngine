@@ -30,13 +30,16 @@ float CircleShape::GetMomentOfInertia() const
 
 PolygonShape::PolygonShape(const std::vector<Vec2> vertices)
 {
-    //TODO
+    for (auto vertex : vertices)
+    {
+        localVertices.push_back(vertex);    
+        worldVertices.push_back(vertex);
+    }
     std::cout << "PolygonShape constructed" << std::endl;
 }
 
 PolygonShape::~PolygonShape()
 {
-    //TODO
     std::cout << "PolygonShape destructed" << std::endl;
 }
 
@@ -52,8 +55,8 @@ Shape* PolygonShape::Clone() const
 
 float PolygonShape::GetMomentOfInertia() const
 {
-    //TODO
-    return 0.0;
+    //TODO Calculate from vertices
+    return 5000.f;
 }
 
 void PolygonShape::UpdateVertices(const Vec2& position, float angle)
@@ -131,7 +134,6 @@ BoxShape::BoxShape(float width, float height)
 
 BoxShape::~BoxShape()
 {
-    //TODO
     std::cout << "BoxShape destructed" << std::endl;
 }
 

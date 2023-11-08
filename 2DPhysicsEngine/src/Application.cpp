@@ -12,10 +12,37 @@ void Application::CreateBody(float x, float y)
 {
     auto newBody = new Body(CircleShape(50), x, y, 1.0);
     newBody->restitution = 0.7f;
+    newBody->SetTexture("./assets/basketball.png");
     // auto newBody = new Body(BoxShape(50,50), x, y, 1);
     bodies.push_back(newBody);
 }
 
+void Application::CreateNewPolygon()
+{
+    if (newPolygonVertices.size() < 3) { return; }
+
+    float xSum{}, ySum{};
+    //Get average aka pivot point
+    for (auto v : newPolygonVertices)
+    {
+        xSum += v.x;
+        ySum += v.y;
+    }
+    float xAverage = xSum / newPolygonVertices.size();
+    float yAverage = ySum / newPolygonVertices.size();
+    Vec2 polygonCentre{xAverage, yAverage};
+    //Rewrite vertices in relation to the pivot point
+    for (int i = 0; i < newPolygonVertices.size(); i++)
+    {
+        newPolygonVertices[i] = newPolygonVertices[i] - polygonCentre;
+    }
+    //Create new polygon
+    auto newBody = new Body(PolygonShape(newPolygonVertices), xAverage, yAverage, 5.0);
+    newBody->restitution = 0.5f;
+    bodies.push_back(newBody);
+    //Clear polygon vertex list
+    newPolygonVertices.clear();
+}
 ///////////////////////////////////////////////////////////////////////////////
 // Setup function (executed once in the beginning of the simulation)
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,18 +52,22 @@ void Application::Setup() {
     //Static floor
     Body* floor = new Body(BoxShape(Graphics::Width() - 100, 100), Graphics::Width()/2.0f, Graphics::Height() - 100, 0.f);
     floor->restitution = 0.2f;
+    floor->SetTexture("./assets/metal.png");
     bodies.push_back(floor);
     //Static ceiling
     Body* ceiling = new Body(BoxShape(Graphics::Width() - 100, 100), Graphics::Width()/2.0f, 100, 0.f);
     ceiling->restitution = 0.2f;
+    ceiling->SetTexture("./assets/metal.png");
     bodies.push_back(ceiling);
     //Static left wall
     Body* lWall = new Body(BoxShape(100, Graphics::Height() - 100), 100, Graphics::Height()/2.0f, 0.f);
     lWall->restitution = 0.2f;
+    lWall->SetTexture("./assets/metal.png");
     bodies.push_back(lWall);    
     //Static right wall
     Body* rWall = new Body(BoxShape(100, Graphics::Height() - 100), Graphics::Width() - 100, Graphics::Height()/2.0f, 0.f);
     rWall->restitution = 0.2f;
+    rWall->SetTexture("./assets/metal.png");
     bodies.push_back(rWall);
     
     // //Static box/Circle
@@ -44,6 +75,7 @@ void Application::Setup() {
     // Body* newBody = new Body(CircleShape(200), Graphics::Width()/2.0f, Graphics::Height()/2.f, 0.f);
     newBody->restitution = 0.5f;
     newBody->rotation = 1.4f;
+    newBody->SetTexture("./assets/crate.png");
     bodies.push_back(newBody);
     
     // sideLength = 250;
@@ -75,6 +107,8 @@ void Application::Input() {
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_ESCAPE)
                 running = false;
+            if (event.key.keysym.sym == SDLK_d)
+                debug = !debug;
             if (event.key.keysym.sym == SDLK_UP)
                 pushForce.y = -50 * PIXELS_PER_METRE;
             if (event.key.keysym.sym == SDLK_RIGHT)
@@ -110,35 +144,45 @@ void Application::Input() {
                 SDL_GetMouseState(&x, &y);
                 CreateBody(x,y);
             }
-            if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
+            if (event.button.button == SDL_BUTTON_MIDDLE)
             {
-                leftmouseButtonDown = true;
                 int x, y;
                 SDL_GetMouseState(&x, &y);
-                mouseCursor.x = x;
-                mouseCursor.y = y;
-                //Get closest body to mouse
-                targetBody = bodies[0];
-                float closestDist = (targetBody->position - mouseCursor).MagnitudeSquared();
-                for (const auto body : bodies)
-                {
-                    float dist = (body->position - mouseCursor).MagnitudeSquared();
-                    if (dist < closestDist)
-                    {
-                        targetBody = body;
-                        closestDist = dist;
-                    }
-                }
+                newPolygonVertices.emplace_back(x,y);
             }
+            if (event.button.button == SDL_BUTTON_LEFT)
+            {
+                CreateNewPolygon();
+            }
+            // if (!leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
+            // {
+            //     leftmouseButtonDown = true;
+            //     int x, y;
+            //     SDL_GetMouseState(&x, &y);
+            //     mouseCursor.x = x;
+            //     mouseCursor.y = y;
+            //     //Get closest body to mouse
+            //     targetBody = bodies[0];
+            //     float closestDist = (targetBody->position - mouseCursor).MagnitudeSquared();
+            //     for (const auto body : bodies)
+            //     {
+            //         float dist = (body->position - mouseCursor).MagnitudeSquared();
+            //         if (dist < closestDist)
+            //         {
+            //             targetBody = body;
+            //             closestDist = dist;
+            //         }
+            //     }
+            // }
             break;
         case SDL_MOUSEBUTTONUP:
-            if (leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
-            {
-                leftmouseButtonDown = false;
-                const Vec2 impulseDirection = (targetBody->position - mouseCursor).UnitVector();
-                const float impulseMagnitude = (targetBody->position - mouseCursor).Magnitude() * 0.1f;
-                targetBody->velocity = impulseDirection * impulseMagnitude;
-            }
+            // if (leftmouseButtonDown && event.button.button == SDL_BUTTON_LEFT)
+            // {
+            //     leftmouseButtonDown = false;
+            //     const Vec2 impulseDirection = (targetBody->position - mouseCursor).UnitVector();
+            //     const float impulseMagnitude = (targetBody->position - mouseCursor).Magnitude() * 0.1f;
+            //     targetBody->velocity = impulseDirection * impulseMagnitude;
+            // }
             break;
         }
     }
@@ -249,11 +293,14 @@ void Application::Update() {
             {
                 contact.ResolveCollision();
                 //Draw debug info
-                Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFBF5496);
-                Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFBF5496);
-                Graphics::DrawLine(contact.start.x, contact.start.y, contact.start.x + contact.normal.x * 15, contact.start.y + contact.normal.y * 15,0xFFBF5496);
-                bodies[i]->shape->isColliding = true;
-                bodies[j]->shape->isColliding = true;
+                if (debug)
+                {
+                    Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFBF5496);
+                    Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFBF5496);
+                    Graphics::DrawLine(contact.start.x, contact.start.y, contact.start.x + contact.normal.x * 15, contact.start.y + contact.normal.y * 15,0xFFBF5496);
+                    bodies[i]->shape->isColliding = true;
+                    bodies[j]->shape->isColliding = true;
+                }
             }
         }
     }
@@ -286,16 +333,27 @@ void Application::Render() {
         if (body->shape->GetType() == CIRCLE)
         {
             auto circleShape = dynamic_cast<CircleShape*> (body->shape);
-            Uint32 colour = circleShape->isColliding ? 0xFF999999 : 0xFFBF5496;
-            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, colour);
+            if (!debug && body->texture) { Graphics::DrawTexture(body->position.x, body->position.y, circleShape->radius * 2, circleShape->radius * 2, body->rotation, body->texture); }
+            else { Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFFBF5496); }
             // Graphics::DrawFillCircle(body->position.x, body->position.y, circleShape->radius, colour);
         }
         else if (body->shape->GetType() == BOX)
         {
             auto boxShape = dynamic_cast<BoxShape*> (body->shape);
-            Uint32 colour = boxShape->isColliding ? 0xFF999999 : 0xFFBF5496;
-            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->worldVertices, colour);
+            if (!debug && body->texture) { Graphics::DrawTexture(body->position.x, body->position.y, boxShape->width, boxShape->height, body->rotation, body->texture); }
+            else { Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->worldVertices, 0xFFBF5496); }
+           
         }
+        else if (body->shape->GetType() == POLYGON)
+        {
+            auto polygonShape = dynamic_cast<PolygonShape*> (body->shape);
+            if (!debug) {Graphics::DrawFillPolygon(body->position.x, body->position.y, polygonShape->worldVertices, 0xFFBF5496); }
+            else { Graphics::DrawPolygon(body->position.x, body->position.y, polygonShape->worldVertices, 0xFFBF5496); }
+        }
+    }
+    for (auto vertex : newPolygonVertices)
+    {
+        Graphics::DrawFillCircle(vertex.x, vertex.y, 5, 0xFF9F5496);
     }
     Graphics::RenderFrame();
 }

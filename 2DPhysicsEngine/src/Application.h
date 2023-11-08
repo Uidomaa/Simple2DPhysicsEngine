@@ -7,6 +7,7 @@
 
 class Application {
     private:
+    bool debug = false;
     bool running = false;
     std::vector<Body*> bodies;
     Vec2 pushForce{0,0};
@@ -20,10 +21,12 @@ class Application {
     Vec2 mouseCursor{};
     bool leftmouseButtonDown{};
     Body* targetBody{nullptr};
+    std::vector<Vec2> newPolygonVertices{};
 
     void CreateBody(float x, float y);
+    void CreateNewPolygon();
 
-    public:
+public:
         Application() = default;
         ~Application() = default;
         bool IsRunning();
